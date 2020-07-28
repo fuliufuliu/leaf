@@ -2,7 +2,7 @@ package chanrpc_test
 
 import (
 	"fmt"
-	"github.com/name5566/leaf/chanrpc"
+	"github.com/fuliufuliu/leaf/chanrpc"
 	"sync"
 )
 
