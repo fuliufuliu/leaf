@@ -102,6 +102,13 @@ func (a *agent) Run() {
 			if err != nil {
 				log.Debug("unmarshal message error: %v", err)
 				break
+			}else{
+				log.Debug("\n++++ c->s %s %s\n++++ %s\n++++ %s\n",
+					time.Now().Format("2006-01-02 15:04:05.123123123"),
+					a.conn.RemoteAddr(),
+					reflect.TypeOf(msg),
+					msg,
+				)
 			}
 			err = a.gate.Processor.Route(msg, a)
 			if err != nil {
@@ -131,6 +138,13 @@ func (a *agent) WriteMsg(msg interface{}) {
 		err = a.conn.WriteMsg(data...)
 		if err != nil {
 			log.Error("write message %v error: %v", reflect.TypeOf(msg), err)
+		}else{
+			log.Debug("\n---- s->c %s %s\n---- %s\n---- %s\n",
+					time.Now().Format("2006-01-02 15:04:05.123123123"),
+					a.conn.RemoteAddr(),
+					reflect.TypeOf(msg),
+					msg,
+				)
 		}
 	}
 }
