@@ -103,9 +103,13 @@ func (a *agent) Run() {
 				log.Debug("unmarshal message error: %v", err)
 				break
 			}else{
-				log.Debug("\n++++ c->s %s %s\n++++ %s\n++++ %s\n",
+				var playerName string = ""
+				if a.UserData() != nil {
+					playerName = a.UserData().([]interface{})[1].(string)
+				}
+				log.Debug("\n++++ c->s %s %s %s\n++++ %s\n++++ %s\n",
 					time.Now().Format("2006-01-02 15:04:05.123123123"),
-					a.conn.RemoteAddr(),
+					a.conn.RemoteAddr(), playerName,
 					reflect.TypeOf(msg),
 					msg,
 				)
@@ -139,9 +143,13 @@ func (a *agent) WriteMsg(msg interface{}) {
 		if err != nil {
 			log.Error("write message %v error: %v", reflect.TypeOf(msg), err)
 		}else{
-			log.Debug("\n---- s->c %s %s\n---- %s\n---- %s\n",
+			var playerName string = ""
+			if a.UserData() != nil {
+				playerName = a.UserData().([]interface{})[1].(string)
+			}
+			log.Debug("\n---- s->c %s %s %s\n---- %s\n---- %s\n",
 					time.Now().Format("2006-01-02 15:04:05.123123123"),
-					a.conn.RemoteAddr(),
+					a.conn.RemoteAddr(),playerName,
 					reflect.TypeOf(msg),
 					msg,
 				)
