@@ -107,7 +107,7 @@ func (a *agent) Run() {
 				if a.UserData() != nil {
 					playerName = a.UserData().([]interface{})[1].(string)
 				}
-				log.Debug("\n++++ c->s %s %s %s\n++++ %s\n++++ %s\n",
+				log.Debug("\n++++ c->s %s %s %s\n++++ %s\n++++ %s\n\n",
 					time.Now().Format("2006-01-02 15:04:05.123123123"),
 					a.conn.RemoteAddr(), playerName,
 					reflect.TypeOf(msg),
@@ -147,7 +147,7 @@ func (a *agent) WriteMsg(msg interface{}) {
 			if a.UserData() != nil {
 				playerName = a.UserData().([]interface{})[1].(string)
 			}
-			log.Debug("\n---- s->c %s %s %s\n---- %s\n---- %s\n",
+			log.Debug("\n---- s->c %s %s %s\n---- %s\n---- %s\n\n",
 					time.Now().Format("2006-01-02 15:04:05.123123123"),
 					a.conn.RemoteAddr(),playerName,
 					reflect.TypeOf(msg),
