@@ -1,23 +1,27 @@
 package recordfile
 
 import (
-	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
-var Comma = '\t'
-var Comment = '#'
+var Comma = "~"
+var Comment = "#"
+var LineEndStr = "!####!\n";
 
 type Index map[interface{}]interface{}
 
 type RecordFile struct {
-	Comma      rune
-	Comment    rune
+	Comma      string	// 字段分隔符
+	Comment    string	// 注释行标识符
+	LineEndStr string	// 行分隔符
 	typeRecord reflect.Type
 	records    []interface{}
 	indexes    []Index
@@ -73,23 +77,62 @@ func New(st interface{}) (*RecordFile, error) {
 	return rf, nil
 }
 
-func (rf *RecordFile) Read(name string) error {
-	file, err := os.Open(name)
+func (rf *RecordFile) ReadData(fileName string) ([][]string, error) {
+	f, err := os.Open(fileName)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer file.Close()
+	defer f.Close()
 
-	if rf.Comma == 0 {
+	fd, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	fileContent := string(fd)
+	lines := strings.Split(fileContent, rf.LineEndStr)
+
+	rows := *new([][]string)
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		if line == "" {
+			continue
+		}
+		if strings.HasSuffix(line, "\n"){
+			line = line[:len(line)-1]
+		}
+		if err != nil && io.EOF != err {
+			return nil, err
+		}
+
+		if strings.HasPrefix(line, rf.Comment){
+			continue
+		}
+
+		row := strings.Split(line, rf.Comma)
+
+		rows = append(rows, row)
+
+		if io.EOF == err {
+			break
+		}
+	}
+	return rows, nil
+}
+
+func (rf *RecordFile) Read(name string) error {
+	if rf.Comma == "" {
 		rf.Comma = Comma
 	}
-	if rf.Comment == 0 {
+	if rf.Comment == "" {
 		rf.Comment = Comment
 	}
-	reader := csv.NewReader(file)
-	reader.Comma = rf.Comma
-	reader.Comment = rf.Comment
-	lines, err := reader.ReadAll()
+
+	if rf.LineEndStr == "" {
+		rf.LineEndStr = LineEndStr
+	}
+
+	lines, err := rf.ReadData(name)
+
 	if err != nil {
 		return err
 	}
@@ -145,6 +188,10 @@ func (rf *RecordFile) Read(name string) error {
 				kind == reflect.Int16 ||
 				kind == reflect.Int32 ||
 				kind == reflect.Int64 {
+
+				if strings.TrimSpace(strField) == "" {
+					strField = "0"
+				}
 				var v int64
 				v, err = strconv.ParseInt(strField, 0, f.Type.Bits())
 				if err == nil {
@@ -155,6 +202,10 @@ func (rf *RecordFile) Read(name string) error {
 				kind == reflect.Uint16 ||
 				kind == reflect.Uint32 ||
 				kind == reflect.Uint64 {
+
+				if strings.TrimSpace(strField) == "" {
+					strField = "0"
+				}
 				var v uint64
 				v, err = strconv.ParseUint(strField, 0, f.Type.Bits())
 				if err == nil {
@@ -162,6 +213,10 @@ func (rf *RecordFile) Read(name string) error {
 				}
 			} else if kind == reflect.Float32 ||
 				kind == reflect.Float64 {
+
+				if strings.TrimSpace(strField) == "" {
+					strField = "0"
+				}
 				var v float64
 				v, err = strconv.ParseFloat(strField, f.Type.Bits())
 				if err == nil {
